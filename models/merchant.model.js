@@ -22,6 +22,11 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       unique: true
     }
+  }, {
+    timestamps: true,           
+    underscored: true,          
+    createdAt: 'created_at',     
+    updatedAt: 'updated_at'     
   });
   
   return Merchant;
