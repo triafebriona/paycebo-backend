@@ -1,8 +1,14 @@
 module.exports = (sequelize, Sequelize) => {
   const Payment = sequelize.define('payment', {
     id: {
-      type: Sequelize.STRING,
-      primaryKey: true
+      type: Sequelize.INTEGER,
+      primaryKey: true,
+      autoIncrement: true            
+    },
+    payment_id: {
+      type: Sequelize.STRING(100),
+      allowNull: false,
+      unique: true
     },
     merchant_id: {
       type: Sequelize.INTEGER,
@@ -15,7 +21,7 @@ module.exports = (sequelize, Sequelize) => {
     currency: {
       type: Sequelize.STRING,
       allowNull: false,
-      defaultValue: 'INR'
+      defaultValue: 'IDR'           
     },
     status: {
       type: Sequelize.ENUM('created', 'success', 'failed', 'declined', 'insufficient_funds', 'expired_card', 'processing', 'timeout'),
@@ -30,10 +36,11 @@ module.exports = (sequelize, Sequelize) => {
       defaultValue: false
     }
   }, {
-    timestamps: true,           
-    underscored: true,          
-    createdAt: 'created_at',     
-    updatedAt: 'updated_at'      
+    timestamps: true,
+    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
+  
   return Payment;
 };
