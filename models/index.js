@@ -1,6 +1,13 @@
 const dbConfig = require('../config/db.config');
 const Sequelize = require('sequelize');
 
+console.log('=== DATABASE CONFIGURATION ===');
+console.log('DB_USER:', dbConfig.USER ? 'ADA ✓' : 'TIDAK ADA ✗');
+console.log('DB_PASSWORD:', dbConfig.PASSWORD ? 'ADA ✓' : 'TIDAK ADA ✗');
+console.log('DB_HOST:', dbConfig.HOST);
+console.log('DB_NAME:', dbConfig.DB);
+console.log('===============================');
+
 const sequelize = new Sequelize(
   dbConfig.DB,
   dbConfig.USER,

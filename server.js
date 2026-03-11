@@ -6,6 +6,12 @@ const { sequelize } = require('./models');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+console.log('=== ENV VARIABLES (DIRECT) ===');
+console.log('DB_USER:', process.env.DB_USER ? 'ADA' : 'TIDAK ADA');
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? 'ADA' : 'TIDAK ADA');
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('===============================');
+
 app.use(cors());
 app.use(express.json());
 

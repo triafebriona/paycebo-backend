@@ -1,10 +1,11 @@
 require('dotenv').config();
 
-module.exports = {
+const dbConfig = {
   HOST: process.env.DB_HOST || 'localhost',
   USER: process.env.DB_USER || 'root',
-  PASSWORD: process.env.DB_PASS || '',
+  PASSWORD: process.env.DB_PASSWORD || '',
   DB: process.env.DB_NAME || 'paycebo_db',
+  port: process.env.DB_PORT || 4000,
   dialect: 'mysql',
   logging: false,
   pool: {
@@ -20,3 +21,15 @@ module.exports = {
     }
   }
 };
+
+console.log('=== DB CONFIG (VALUE) ===');
+console.log('USER:', dbConfig.USER);
+console.log('PASSWORD length:', dbConfig.PASSWORD ? dbConfig.PASSWORD.length : 0);
+console.log('PASSWORD first char:', dbConfig.PASSWORD ? dbConfig.PASSWORD[0] : 'none');
+console.log('PASSWORD last char:', dbConfig.PASSWORD ? dbConfig.PASSWORD[dbConfig.PASSWORD.length - 1] : 'none');
+console.log('HOST:', dbConfig.HOST);
+console.log('PORT:', dbConfig.port);
+console.log('DB:', dbConfig.DB);
+console.log('==========================');
+
+module.exports = dbConfig;
