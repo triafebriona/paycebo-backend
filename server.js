@@ -26,11 +26,11 @@ app.get('/', (req, res) => {
   res.send('PayCebo API is running');
 });
 
-sequelize.sync().then(() => {
-  console.log('Database connected');
-  app.listen(PORT, () => {
+sequelize.sync({ alter: true }).then(() => {
+  console.log('Database connected (sync with alter)');
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
   });
 }).catch(err => {
-  console.error('Failed to connect to database:', err);
+  console.error('Failed to sync database:', err);
 });
