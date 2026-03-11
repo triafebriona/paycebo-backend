@@ -21,8 +21,8 @@ exports.createPayment = async (req, res) => {
       payment_id: paymentId,
       merchant_id: merchantId,
       amount,
-      currency: currency || 'INR',
-      status: 'created',
+      currency: currency || 'IDR',
+      status: 'pending',
       redirect_url
     });
     
