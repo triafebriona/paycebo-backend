@@ -6,11 +6,17 @@ module.exports = {
   PASSWORD: process.env.DB_PASS || '',
   DB: process.env.DB_NAME || 'paycebo_db',
   dialect: 'mysql',
-  logging: false, // Disable SQL query logging
+  logging: false,
   pool: {
     max: 5,
     min: 0,
     acquire: 30000,
     idle: 10000
+  },
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
   }
 };
