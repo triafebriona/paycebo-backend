@@ -15,10 +15,10 @@ exports.createPayment = async (req, res) => {
       return res.status(400).json({ message: 'Amount and redirect_url are required' });
     }
     
-    const paymentId = uuidv4();
+    const paymentId = uuidv4(); 
     
     await Payment.create({
-      id: paymentId,
+      payment_id: paymentId,
       merchant_id: merchantId,
       amount,
       currency: currency || 'INR',
@@ -26,7 +26,6 @@ exports.createPayment = async (req, res) => {
       redirect_url
     });
     
-    // Return the payment ID instead of a URL
     res.status(201).json({
       message: 'Payment created successfully',
       payment_id: paymentId
