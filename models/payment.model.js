@@ -31,6 +31,10 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       allowNull: false
     },
+    merchant_reference: {          
+      type: Sequelize.STRING,
+      allowNull: true
+    },
     webhook_sent: {
       type: Sequelize.BOOLEAN,
       defaultValue: false
