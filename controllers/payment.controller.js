@@ -8,7 +8,7 @@ const { Op, Sequelize } = db.Sequelize;
 
 exports.createPayment = async (req, res) => {
   try {
-    const { amount, currency, redirect_url } = req.body;
+    const { amount, currency, redirect_url, merchant_reference } = req.body;
     const merchantId = req.merchantId;
     
     if (!amount || !redirect_url) {
@@ -23,7 +23,8 @@ exports.createPayment = async (req, res) => {
       amount,
       currency: currency || 'IDR',
       status: 'pending',
-      redirect_url
+      redirect_url,
+      merchant_reference
     });
     
     res.status(201).json({
