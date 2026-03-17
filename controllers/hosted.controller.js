@@ -66,7 +66,9 @@ exports.submitPayment = async (req, res) => {
       return res.status(400).json({ message: 'All payment details are required' });
     }
     
-    const payment = await Payment.findByPk(payment_id);
+    const payment = await Payment.findOne({
+      where: { payment_id: payment_id }
+    });
     
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found' });
