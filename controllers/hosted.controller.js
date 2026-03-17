@@ -132,7 +132,7 @@ exports.submitPayment = async (req, res) => {
     
     // ===== Webhook dimatikan sementara =====
     console.log('[SUBMIT] Webhook skipped (disabled for debugging)');
-    // paymentController.sendWebhook(payment_id, status);
+    paymentController.sendWebhook(payment_id, status);
     
     // SIAPKAN RESPONSE
     console.log('[SUBMIT] Preparing response');
