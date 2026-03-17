@@ -60,50 +60,97 @@ exports.getPaymentPage = async (req, res) => {
 
 exports.submitPayment = async (req, res) => {
   try {
+    console.log('[SUBMIT] ===== START SUBMIT PAYMENT =====');
+    console.log('[SUBMIT] Request body:', req.body);
+    
     const { payment_id, card_number, expiry, cvv, otp } = req.body;
     
     if (!payment_id || !card_number || !expiry || !cvv) {
+      console.log('[SUBMIT] Missing required fields');
       return res.status(400).json({ message: 'All payment details are required' });
     }
     
+    console.log(`[SUBMIT] Looking for payment with ID: ${payment_id}`);
+    
+    // Cari payment berdasarkan payment_id (UUID)
     const payment = await Payment.findOne({
       where: { payment_id: payment_id }
     });
     
     if (!payment) {
+      console.log('[SUBMIT] Payment not found in database');
       return res.status(404).json({ message: 'Payment not found' });
     }
     
+    console.log('[SUBMIT] Payment found:', {
+      id: payment.id,
+      payment_id: payment.payment_id,
+      status: payment.status,
+      amount: payment.amount,
+      merchant_id: payment.merchant_id
+    });
+    
+    // Cek status - hanya 'pending' yang boleh diproses
     if (payment.status !== 'pending') {
+      console.log(`[SUBMIT] Invalid status: ${payment.status}, expected 'pending'`);
       return res.status(400).json({ message: 'Payment already processed' });
     }
     
+    // Tentukan status berdasarkan kartu
     let status;
+    console.log(`[SUBMIT] Processing card: ${card_number.substring(0,4)}...${card_number.substring(12)}`);
     
     const customOutcome = await testCardController.getCardOutcome(card_number);
     
     if (customOutcome) {
       status = customOutcome;
+      console.log(`[SUBMIT] Custom outcome: ${status}`);
     } else if (card_number === '4111111111111111') {
       status = 'success';
+      console.log('[SUBMIT] Success card detected');
     } else if (card_number === '5500000000000004') {
       status = 'failed';
+      console.log('[SUBMIT] Failed card detected');
     } else {
       const lastDigit = parseInt(card_number.slice(-1));
       status = lastDigit % 2 === 0 ? 'success' : 'failed';
+      console.log(`[SUBMIT] Random outcome based on last digit: ${status}`);
     }
     
-    payment.status = status;
-    await payment.save();
+    // UPDATE STATUS PAYMENT
+    console.log(`[SUBMIT] Updating payment status from '${payment.status}' to '${status}'`);
     
+    try {
+      payment.status = status;
+      await payment.save();
+      console.log('[SUBMIT] Payment saved successfully');
+    } catch (saveError) {
+      console.error('[SUBMIT] Error saving payment:', saveError.message);
+      console.error(saveError);
+      return res.status(500).json({ message: 'Database error', error: saveError.message });
+    }
+    
+    // ===== Webhook dimatikan sementara =====
+    console.log('[SUBMIT] Webhook skipped (disabled for debugging)');
     // paymentController.sendWebhook(payment_id, status);
     
-    res.status(200).json({
+    // SIAPKAN RESPONSE
+    console.log('[SUBMIT] Preparing response');
+    
+    const responseData = {
       payment_id: payment.id,
-      status,
-      redirect_url: payment.redirect_url
-    });
+      status: status,
+      redirect_url: payment.redirect_url || '/payment-result'
+    };
+    
+    console.log('[SUBMIT] Response data:', responseData);
+    console.log('[SUBMIT] ===== END SUBMIT PAYMENT =====');
+    
+    res.status(200).json(responseData);
+    
   } catch (err) {
+    console.error('[SUBMIT] UNCAUGHT ERROR:', err);
+    console.error(err.stack);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
