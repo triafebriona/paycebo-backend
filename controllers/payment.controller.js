@@ -135,7 +135,10 @@ exports.getWebhook = async (req, res) => {
 
 exports.sendWebhook = async (paymentId, status) => {
   try {
-    const payment = await Payment.findByPk(paymentId);
+    const payment = await Payment.findOne({
+      where: { payment_id: paymentId }
+    });
+
     if (!payment) return;
     
     const webhook = await Webhook.findOne({
