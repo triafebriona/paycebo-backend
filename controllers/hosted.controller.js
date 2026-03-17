@@ -96,7 +96,7 @@ exports.submitPayment = async (req, res) => {
     payment.status = status;
     await payment.save();
     
-    paymentController.sendWebhook(payment_id, status);
+    // paymentController.sendWebhook(payment_id, status);
     
     res.status(200).json({
       payment_id: payment.id,
