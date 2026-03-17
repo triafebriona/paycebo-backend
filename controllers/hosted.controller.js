@@ -74,7 +74,7 @@ exports.submitPayment = async (req, res) => {
       return res.status(404).json({ message: 'Payment not found' });
     }
     
-    if (payment.status !== 'created') {
+    if (payment.status !== 'pending') {
       return res.status(400).json({ message: 'Payment already processed' });
     }
     
