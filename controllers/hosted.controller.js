@@ -7,9 +7,11 @@ const Branding = db.brandings;
 exports.getPaymentPage = async (req, res) => {
   try {
     const { paymentId } = req.params;
-    
-    const payment = await Payment.findByPk(paymentId);
-    
+        
+    const payment = await Payment.findOne({
+      where: { payment_id: paymentId }
+    });
+
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found' });
     }
