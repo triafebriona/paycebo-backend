@@ -3,6 +3,7 @@ const Payment = db.payments;
 const paymentController = require('./payment.controller');
 const testCardController = require('./testcard.controller');
 const Branding = db.brandings;
+const axios = require('axios');
 
 exports.getPaymentPage = async (req, res) => {
   try {
@@ -119,7 +120,7 @@ exports.submitPayment = async (req, res) => {
     
     // UPDATE STATUS PAYMENT
     console.log(`[SUBMIT] Updating payment status from '${payment.status}' to '${status}'`);
-    
+
     try {
       payment.status = status;
       await payment.save();
@@ -129,29 +130,44 @@ exports.submitPayment = async (req, res) => {
       console.error(saveError);
       return res.status(500).json({ message: 'Database error', error: saveError.message });
     }
-    
-    // ===== Webhook dimatikan sementara =====
-    console.log(`[HOSTED] Mengirim webhook untuk payment ${payment_id} dengan status ${status}`);
+
+    // ===== KIRIM WEBHOOK LANGSUNG KE NGROK =====
+    console.log(`[WEBHOOK DIRECT] Mengirim ke ngrok untuk payment ${payment.payment_id}`);
+
+    const webhookPayload = {
+      order_id: payment.payment_id,
+      transaction_status: status,
+      gross_amount: payment.amount,
+      payment_type: 'card',
+      transaction_time: new Date().toISOString(),
+      settlement_time: new Date().toISOString()
+    };
+
     try {
-      await paymentController.sendWebhook(payment_id, status);
-      console.log('[HOSTED] Webhook berhasil dikirim');
+      const webhookResponse = await axios.post('https://jovani-stickless-unpetulantly.ngrok-free.dev/payment/callback', webhookPayload, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 5000
+      });
+      
+      console.log(`[WEBHOOK DIRECT] Sukses! Status: ${webhookResponse.status}`);
+      
     } catch (webhookError) {
-      console.error('[HOSTED] Gagal mengirim webhook:', webhookError.message);
+      console.error('[WEBHOOK DIRECT] Gagal:', webhookError.message);
       // Webhook gagal, tapi payment tetap sukses
     }
-    
+
     // SIAPKAN RESPONSE
     console.log('[SUBMIT] Preparing response');
-    
+
     const responseData = {
       payment_id: payment.id,
       status: status,
       redirect_url: payment.redirect_url || '/payment-result'
     };
-    
+
     console.log('[SUBMIT] Response data:', responseData);
     console.log('[SUBMIT] ===== END SUBMIT PAYMENT =====');
-    
+
     res.status(200).json(responseData);
     
   } catch (err) {
