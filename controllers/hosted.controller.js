@@ -131,8 +131,14 @@ exports.submitPayment = async (req, res) => {
     }
     
     // ===== Webhook dimatikan sementara =====
-    console.log('[SUBMIT] Webhook skipped (disabled for debugging)');
-    paymentController.sendWebhook(payment_id, status);
+    console.log(`[HOSTED] Mengirim webhook untuk payment ${payment_id} dengan status ${status}`);
+    try {
+      await paymentController.sendWebhook(payment_id, status);
+      console.log('[HOSTED] Webhook berhasil dikirim');
+    } catch (webhookError) {
+      console.error('[HOSTED] Gagal mengirim webhook:', webhookError.message);
+      // Webhook gagal, tapi payment tetap sukses
+    }
     
     // SIAPKAN RESPONSE
     console.log('[SUBMIT] Preparing response');

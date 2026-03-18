@@ -134,27 +134,52 @@ exports.getWebhook = async (req, res) => {
 };
 
 exports.sendWebhook = async (paymentId, status) => {
+  console.log(`[WEBHOOK] ===== START =====`);
+  console.log(`[WEBHOOK] Payment ID: ${paymentId}, Status: ${status}`);
+  
   try {
+    // 1. Cari payment berdasarkan payment_id (UUID)
+    console.log(`[WEBHOOK] Mencari payment dengan UUID: ${paymentId}`);
+    
     const payment = await Payment.findOne({
       where: { payment_id: paymentId }
     });
-
-    if (!payment) return;
+    
+    if (!payment) {
+      console.log(`[WEBHOOK] ERROR: Payment dengan UUID ${paymentId} tidak ditemukan`);
+      return false;
+    }
+    
+    console.log(`[WEBHOOK] Payment ditemukan! ID: ${payment.id}, Merchant: ${payment.merchant_id}`);
+    
+    // 2. Cari webhook URL merchant
+    console.log(`[WEBHOOK] Mencari webhook untuk merchant ${payment.merchant_id}`);
     
     const webhook = await Webhook.findOne({
       where: { merchant_id: payment.merchant_id }
     });
     
-    if (!webhook) return;
+    if (!webhook) {
+      console.log(`[WEBHOOK] ERROR: Tidak ada webhook untuk merchant ${payment.merchant_id}`);
+      return false;
+    }
     
+    console.log(`[WEBHOOK] Webhook ditemukan: ${webhook.url}`);
+    
+    // 3. Siapkan payload (format sesuai yang diharapkan operation service)
     const payload = {
-      payment_id: payment.id,
-      merchant_id: payment.merchant_id,
-      amount: payment.amount,
-      currency: payment.currency,
-      status,
-      timestamp: new Date().toISOString()
+      order_id: payment.payment_id,
+      transaction_status: status,
+      gross_amount: parseFloat(payment.amount),
+      payment_type: 'card',
+      transaction_time: payment.createdAt || new Date().toISOString(),
+      settlement_time: new Date().toISOString()
     };
+    
+    console.log(`[WEBHOOK] Payload:`, JSON.stringify(payload));
+    
+    // 4. Kirim webhook
+    console.log(`[WEBHOOK] Mengirim ke: ${webhook.url}`);
     
     let success = false;
     let statusCode = null;
@@ -162,39 +187,62 @@ exports.sendWebhook = async (paymentId, status) => {
     let errorMessage = null;
     
     try {
-      const response = await axios.post(webhook.url, payload);
+      const response = await axios.post(webhook.url, payload, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 5000
+      });
+      
       success = response.status >= 200 && response.status < 300;
       statusCode = response.status;
       responseBody = JSON.stringify(response.data);
+      
+      console.log(`[WEBHOOK] RESPONSE: Status ${statusCode}, Success: ${success}`);
+      if (responseBody) console.log(`[WEBHOOK] Response body: ${responseBody}`);
+      
     } catch (webhookError) {
       success = false;
       statusCode = webhookError.response?.status;
       responseBody = webhookError.response?.data ? JSON.stringify(webhookError.response.data) : null;
       errorMessage = webhookError.message;
+      
+      console.error(`[WEBHOOK] ERROR KIRIM: ${errorMessage}`);
+      if (statusCode) console.error(`[WEBHOOK] Status code: ${statusCode}`);
+      if (responseBody) console.error(`[WEBHOOK] Response body: ${responseBody}`);
     }
     
-    // Log the webhook attempt
-    await WebhookLog.create({
-      merchant_id: payment.merchant_id,
-      payment_id: payment.id,
-      webhook_id: webhook.id,
-      url: webhook.url,
-      status_code: statusCode,
-      request_body: JSON.stringify(payload),
-      response_body: responseBody,
-      success,
-      error_message: errorMessage,
-      retry_count: 0
-    });
+    // 5. Log webhook attempt
+    try {
+      await WebhookLog.create({
+        merchant_id: payment.merchant_id,
+        payment_id: payment.id,
+        webhook_id: webhook.id,
+        url: webhook.url,
+        status_code: statusCode,
+        request_body: JSON.stringify(payload),
+        response_body: responseBody,
+        success: success,
+        error_message: errorMessage,
+        retry_count: 0
+      });
+      console.log(`[WEBHOOK] Log tersimpan di database`);
+    } catch (logError) {
+      console.error(`[WEBHOOK] Gagal menyimpan log:`, logError.message);
+    }
     
+    // 6. Update webhook_sent jika sukses
     if (success) {
       payment.webhook_sent = true;
       await payment.save();
+      console.log(`[WEBHOOK] Status webhook_sent diupdate`);
     }
     
+    console.log(`[WEBHOOK] ===== SELESAI =====`);
     return success;
+    
   } catch (err) {
-    console.error('Webhook processing failed:', err);
+    console.error(`[WEBHOOK] UNCAUGHT ERROR:`, err);
+    console.error(err.stack);
+    console.log(`[WEBHOOK] ===== GAGAL TOTAL =====`);
     return false;
   }
 };
