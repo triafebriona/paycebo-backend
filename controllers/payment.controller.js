@@ -70,7 +70,7 @@ exports.getAllPayments = async (req, res) => {
     
     const payments = await Payment.findAll({
       where: { merchant_id: merchantId },
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
     
     res.status(200).json(payments);
