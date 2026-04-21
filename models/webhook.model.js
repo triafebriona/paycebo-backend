@@ -7,13 +7,25 @@ module.exports = (sequelize, Sequelize) => {
     },
     merchant_id: {
       type: Sequelize.INTEGER,
-      allowNull: false,
-      unique: true
+      allowNull: false
     },
     url: {
-      type: Sequelize.STRING,
+      type: Sequelize.STRING(500),
       allowNull: false
+    },
+    events: {
+      type: Sequelize.TEXT,
+      allowNull: true
+    },
+    is_active: {
+      type: Sequelize.BOOLEAN,
+      defaultValue: true
     }
+  }, {
+    timestamps: true,
+    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   });
   
   return Webhook;
