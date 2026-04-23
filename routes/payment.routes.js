@@ -10,5 +10,6 @@ router.post('/webhook', verifyToken, paymentController.setWebhook);
 router.get('/webhook', verifyToken, paymentController.getWebhook);
 router.get('/webhook-logs', verifyToken, paymentController.getWebhookLogs);
 router.post('/webhook-logs/:logId/retry', verifyToken, paymentController.retryWebhook);
+router.post('/payments/update-status', paymentController.updatePaymentStatus);
 
 module.exports = router;

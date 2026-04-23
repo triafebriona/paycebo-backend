@@ -340,6 +340,32 @@ exports.retryWebhook = async (req, res) => {
       log: newLog
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Servmaser error', error: err.message });
   }
+};
+
+exports.updatePaymentStatus = async (req, res) => {
+    try {
+        const { payment_id, status } = req.body;
+        
+        if (!payment_id || !status) {
+            return res.status(400).json({ message: 'payment_id and status are required' });
+        }
+        
+        const payment = await Payment.findOne({ where: { payment_id: payment_id } });
+        
+        if (!payment) {
+            return res.status(404).json({ message: 'Payment not found' });
+        }
+        
+        payment.status = status;
+        await payment.save();
+        
+        console.log(`[PAYMENT] Updated payment ${payment_id} status to ${status}`);
+        res.json({ success: true, message: 'Status updated' });
+        
+    } catch (err) {
+        console.error('[PAYMENT] Update status error:', err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
 };
